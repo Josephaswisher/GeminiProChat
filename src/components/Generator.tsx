@@ -40,9 +40,14 @@ export default () => {
       console.error(err)
     }
 
+    // Listen for "New Chat" event dispatched by the sidebar
+    const handleNewChatEvent = () => clear()
+    window.addEventListener('new-chat', handleNewChatEvent)
+
     window.addEventListener('beforeunload', handleBeforeUnload)
     onCleanup(() => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener('new-chat', handleNewChatEvent)
     })
   })
 
@@ -101,12 +106,16 @@ export default () => {
         parts: [{ text: message.content }],
       })).slice(-maxHistoryMessages)
       const timestamp = Date.now()
+      const systemRole = localStorage.getItem('systemRole') || ''
+      const temperature = parseFloat(localStorage.getItem('temperature') || '0.6')
       const response = await fetch('/api/generate', {
         method: 'POST',
         body: JSON.stringify({
           messages: convertReqMsgList(requestMessageList),
           time: timestamp,
           pass: storagePassword,
+          systemRole,
+          temperature,
           sign: await generateSignature({
             t: timestamp,
             m: requestMessageList?.[requestMessageList.length - 1]?.parts[0]?.text || '',

@@ -8,8 +8,11 @@ const genAI = apiBaseUrl
   ? new GoogleGenerativeAI(apiKey, apiBaseUrl)
   : new GoogleGenerativeAI(apiKey)
 
-export const startChatAndSendMessageStream = async(history: ChatMessage[], newMessage: string) => {
-  const model = genAI.getGenerativeModel({ model: modelName })
+export const startChatAndSendMessageStream = async(history: ChatMessage[], newMessage: string, systemRole = '', temperature = 0.6) => {
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+    ...(systemRole ? { systemInstruction: systemRole } : {}),
+  })
 
   const chat = model.startChat({
     history: history.map(msg => ({
@@ -18,6 +21,7 @@ export const startChatAndSendMessageStream = async(history: ChatMessage[], newMe
     })),
     generationConfig: {
       maxOutputTokens: 8000,
+      temperature,
     },
     safetySettings: [
       {category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE'},
