@@ -3,6 +3,11 @@ export interface ChatPart {
 }
 
 export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+export interface GeminiMessage {
   role: 'model' | 'user'
   parts: ChatPart[]
 }

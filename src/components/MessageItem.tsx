@@ -4,6 +4,7 @@ import mdKatex from 'markdown-it-katex'
 import mdHighlight from 'markdown-it-highlightjs'
 import { useClipboard, useEventListener } from 'solidjs-use'
 import IconRefresh from './icons/Refresh'
+import SendToCanvas from './icons/SendToCanvas'
 import type { Accessor } from 'solid-js'
 import type { ChatMessage } from '@/types'
 
@@ -12,6 +13,10 @@ interface Props {
   message: Accessor<string> | string
   showRetry?: Accessor<boolean>
   onRetry?: () => void
+}
+
+const handleSendToCanvas = (content: string) => {
+  window.dispatchEvent(new CustomEvent('send-to-canvas', { detail: { content } }))
 }
 
 export default ({ role, message, showRetry, onRetry }: Props) => {
@@ -74,12 +79,24 @@ export default ({ role, message, showRetry, onRetry }: Props) => {
         <div class={`shrink-0 w-7 h-7 mt-4 rounded-full op-80 ${roleClass[role]}`} />
         <div class="message prose break-words overflow-hidden" innerHTML={htmlString()} />
       </div>
-      {showRetry?.() && onRetry && (
-        <div class="fie px-3 mb-2">
-          <div onClick={onRetry} class="gpt-retry-btn">
-            <IconRefresh />
-            <span>Regenerate</span>
+      {role === 'assistant' && (
+        <div class="fie px-3 mb-2 gap-2">
+          <div
+            onClick={() => {
+              const text = typeof message === 'function' ? message() : message
+              handleSendToCanvas(text)
+            }}
+            class="gpt-retry-btn"
+          >
+            <SendToCanvas />
+            <span>Send to Notes</span>
           </div>
+          {showRetry?.() && onRetry && (
+            <div onClick={onRetry} class="gpt-retry-btn">
+              <IconRefresh />
+              <span>Regenerate</span>
+            </div>
+          )}
         </div>
       )}
     </div>

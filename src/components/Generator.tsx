@@ -10,6 +10,7 @@ import type { ChatMessage, ErrorMessage } from '@/types'
 
 export default () => {
   let inputRef: HTMLTextAreaElement
+  let scrollRef: HTMLDivElement
   const [messageList, setMessageList] = createSignal<ChatMessage[]>([])
   const [currentError, setCurrentError] = createSignal<ErrorMessage>()
   const [currentAssistantMessage, setCurrentAssistantMessage] = createSignal('')
@@ -22,10 +23,12 @@ export default () => {
   createEffect(() => (isStick() && smoothToBottom()))
 
   onMount(() => {
-    let lastPostion = window.scrollY
+    // Use the .chat-panel container for scroll instead of window
+    const container = scrollRef?.closest('.chat-panel') as HTMLElement || scrollRef
+    let lastPostion = container.scrollTop
 
-    window.addEventListener('scroll', () => {
-      const nowPostion = window.scrollY
+    container.addEventListener('scroll', () => {
+      const nowPostion = container.scrollTop
       nowPostion < lastPostion && setStick(false)
       lastPostion = nowPostion
     })
@@ -73,12 +76,16 @@ export default () => {
     instantToBottom()
   }
 
+  const getScrollContainer = () => scrollRef?.closest('.chat-panel') as HTMLElement || scrollRef
+
   const smoothToBottom = useThrottleFn(() => {
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+    const el = getScrollContainer()
+    el?.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
   }, 300, false, true)
 
   const instantToBottom = () => {
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' })
+    const el = getScrollContainer()
+    el?.scrollTo({ top: el.scrollHeight, behavior: 'instant' })
   }
 
   // ? Interim Solution
@@ -221,7 +228,7 @@ export default () => {
   }
 
   return (
-    <div my-6>
+    <div my-6 ref={scrollRef!}>
       {/* beautiful coming soon alert box, position: fixed, screen center, no transparent background, z-index 100*/}
       <Show when={showComingSoon()}>
         <div class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-100">
